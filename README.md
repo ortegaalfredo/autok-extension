@@ -1,45 +1,57 @@
 # autok-extension README
-
-Automated AI bug-hunter. 
-This is a vscode extension implementing the algorithm at https://github.com/ortegaalfredo/autokaker.
-
-
+Autok-Extension is an automated AI bug-hunter for Visual Studio Code.
 ```
-  _____
- /     \ 
-|  o o  |
-| \___/ |
-|_______|     
+      _____
+     /     \ 
+    |  o o  |
+    | \___/ |
+    |_______|
+ Autok-extension 
+(AI self-portrait)
 ```
 
+## Overview
+Autok-Extension is a Visual Studio Code extension that implements the algorithm from [Autokaker](https://github.com/ortegaalfredo/autokaker). This extension helps developers by automatically identifying and reporting bugs in their code, leveraging advanced AI techniques.
+
+
+Demo running on gpt-4o:
 ![autok-extension demo](https://raw.githubusercontent.com/ortegaalfredo/autok-extension/main/autok-demo.gif)
-
 
 ## Install
 
-This extension can be installed from vscode using the "Install from VSIX..." menu from the extensions settings. Just locate the pre-compiled vsix file and open it. 
+First, download the .vsix extension from:
+
+[Autok-extension VSIX](https://github.com/ortegaalfredo/autok-extension/raw/main/autokaker-0.0.1.vsix)
+
+This extension can be installed in VSCode using the "Install from VSIX..." menu from the extensions settings. Simply locate the pre-compiled .vsix file and open it.
 
 ## Usage
 
-After installation, place the cursor inside any c/c++/solidity or even javascript function and press "F12", the plugin will analyze the code and report results.
-By pressing "Ctrl+F12" the extension will sequentailly analizy all functions in the current open file.
+After installation, place the cursor inside any C/C++, Solidity, or JavaScript function and press F12. The plugin will analyze the code and report the results.
+
+By pressing Ctrl+F12, the extension will sequentially analyze all functions in the currently open file.
+
+If a vulnerability is found, it is added as a label as such. The label is color-coded with black meaning no impact and bright red, critical impact. Pressing F12 again will clean all labels.
 
 ## Features
 
-Autok-extension is an automatic vulnerabilit scanner.
-It supports many languages as the AI auto-recognizes the language and framework.
-Supports local LLMs using OpenAI-style endpoints and api key.
+- Automatic vulnerabilit scanner.
+- It supports many languages as the AI auto-recognizes the language and framework.
+- Supports local LLMs using OpenAI-style endpoints and api keys.
 
 ## Requirements
-It was tested on vscode 1.92.
-By default, it uses the free service from Neuroengine.ai, that require no configuration.
+This extension was tested on VSCode 1.92. By default, it uses the free LLM service from [Neuroengine.ai](https://www.neuroengine.ai), which requires no additional configuration.
 
 ## Extension Settings
 
+From the extension settings page, you can set the LLM type (neuroengine, OpenAI or custom endpoint)
+The default do not require any furter configuration. If you choose OpenAI or custom-endpoint, you need to fill the required parameters, like API-key and model name.
+
+![Settings page](https://raw.githubusercontent.com/ortegaalfredo/autok-extension/main/setting.png)
 
 ## Known Issues
-As many vuln scanners, the AI might report false-positives, specially the free version.
-The free version is rate-limited. For good results, a SOTA LLM is recommended, like gpt-4o or Claude-Opus.
+
+Like many vulnerability scanners, the AI might report false positives, especially the free version. The free version is also rate-limited. For optimal results, a state-of-the-art LLM is recommended, such as GPT-4 or Claude-Opus.
 
 ## build
 
