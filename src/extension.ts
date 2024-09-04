@@ -258,8 +258,8 @@ Make sure you verify the vulnerabilities. Write this raw json and nothing more:[
                     // If we erased decorations, then don't call the llm. We don't re-analyze an already-analyzed function.
                     if (disposedDecorations==0) {
                         let messageString: string;
-                        if (KakerState===AnalysisState.AnalyzeAll) {messageString ='Analyzing function '+numranges+' of '+rangesToAnalyze.length+"...";}
-                        else {messageString = 'Analyzing current function...';}
+                        if (KakerState===AnalysisState.AnalyzeAll) {messageString ='AUTOK: Analyzing function '+numranges+' of '+rangesToAnalyze.length+"...";}
+                        else {messageString = 'AUTOK: Analyzing current function...';}
                         //let editorMessage = vscode.window.showInformationMessage(messageString);
                         showNotification(messageString,5000);
                         // Set background color of analyzed range

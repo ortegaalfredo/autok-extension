@@ -12,6 +12,9 @@ This is a vscode extension implementing the algorithm at https://github.com/orte
 |_______|     
 ```
 
+![autok-extension demo](https://raw.githubusercontent.com/ortegaalfredo/autok-extension/main/autok-demo.gif)
+
+
 ## Install
 
 This extension can be installed from vscode using the "Install from VSIX..." menu from the extensions settings. Just locate the pre-compiled vsix file and open it. 
@@ -45,7 +48,7 @@ To build the vsix file, make sure you have node.js installed, then run:
 npm install -g @vscode/vsce
 ```
 
-Then package the extension:
+Then, execute this command in the root directory to compile the extension into a .vsix file:
 
 ```
 vsce package
