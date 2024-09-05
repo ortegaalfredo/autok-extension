@@ -226,7 +226,6 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
             rangesAndTexts = editorDecorations.data;
             }
         });
-        //editor.setDecorations(createDecorationType('',0),[]);
         // Iterate though all ranges and analyze
         let numranges=0;
         for (const analyzedRange of rangesToAnalyze) {
@@ -234,22 +233,22 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
             const code = getTextWithinRange(fullCode,analyzedRange);
             let prompt:string;
             if (detailed===false)
-                prompt = `<s>[INST]Analize the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
+                prompt = `Analyze the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
 
 {"vulnerabilities": [
 {"line":3,shortdescription:"Stack-based buffer overflow", "impact":10},
 {"line":15,shortdescription:"Possible integer overflow in variable X","impact":4}
 ]}
 
-Write this raw json and nothing more:[/INST]`
-            else prompt = `<s>[INST]Analize the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
+Write this raw json and nothing more:`
+            else prompt = `Analyze the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
 
 {"vulnerabilities": [
 {"line":3,shortdescription:"Stack-based buffer overflow: The variable x has a buffer len of 256 but the strcpy function may overflows this buffer, that is located in the stack. This causes the buffer overflow in the stack.", "impact":10},
 {"line":15,shortdescription:"Possible integer overflow in variable X: The variable X is used in a mathematical operation at line YY and the results my exceed the maximum value allowed in the variable.","impact":4}
 ]}
 
-Write this raw json and nothing more:[/INST]`
+Write this raw json and nothing more:`
 
             const jsonbegin= `
 {"vulnerabilities": [

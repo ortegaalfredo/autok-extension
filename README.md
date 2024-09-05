@@ -49,6 +49,32 @@ The default do not require any furter configuration. If you choose OpenAI or cus
 
 ![Settings page](https://raw.githubusercontent.com/ortegaalfredo/autok-extension/main/setting.png)
 
+
+## Setting up local AI
+
+1. **Download your AI model**, for example: [Meta-Llama-3.1-8B-Instruct-GGUF](https://huggingface.co/lmstudio-community/Meta-Llama-3.1-8B-Instruct-GGUF/tree/main)
+
+2. **Download and install `llama.cpp`** from [GitHub Releases](https://github.com/ggerganov/llama.cpp/releases)
+
+3. **Start the server**:
+
+    ```sh
+    ./llama-server -m Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf -if -fa -c 4096 --no-mmap --host 0.0.0.0 --port 2242 -t 10 -np 5
+    ```
+
+    **Note**: Add the parameter `--gpu-layers 200` if you have a Nvidia GPU. This is very recommended.
+
+4. **Open the extension settings** and choose **'custom endpoint'** and set the custom endpoint field to:
+
+    ```
+    http://127.0.0.1:2242/v1/chat/completions
+    ```
+
+    Replace `127.0.0.1` with your IP if you run it on another host.
+
+Note: Llama-3.1-8B will work even without GPU but results will be of worse quality than bigger, slower models.
+
+
 ## Known Issues
 
 Like many vulnerability scanners, the AI might report false positives, especially the free version. The free version is also rate-limited. For optimal results, a state-of-the-art LLM is recommended, such as GPT-4 or Claude-Opus.
