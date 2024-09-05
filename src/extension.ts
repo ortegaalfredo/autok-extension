@@ -74,6 +74,18 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    let disposableDetail = vscode.commands.registerCommand('autokaker.analyzeDetail', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (editor && !LLMActive) {
+            LLMActive = true;
+            KakerState = AnalysisState.AnalyzeCurrent;
+            await highlightDebugLines(editor, KakerState,true);
+            KakerState = AnalysisState.DontRun;
+            LLMActive = false;
+
+        }
+    });
+
     // Register a command to analyze the entire file
     let disposableF12 = vscode.commands.registerCommand('autokaker.analyzeAll', async () => {
         const editor = vscode.window.activeTextEditor;
@@ -87,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     // Add the commands to the context subscriptions
-    context.subscriptions.push(disposableF11, disposableF12);
+    context.subscriptions.push(disposableF11, disposableF12,disposableDetail);
 
     // Subscribe to the event when the active text editor changes (switching tabs)
     const changeTab = vscode.window.onDidChangeActiveTextEditor(editor => {
@@ -183,7 +195,7 @@ function showNotification(message: string, duration: number) {
     );
   }
 
-async function highlightDebugLines(editor: vscode.TextEditor,KakerState:AnalysisState) {
+async function highlightDebugLines(editor: vscode.TextEditor,KakerState:AnalysisState, detailed=false) {
     if (editor) {
         const fullCode = editor.document.getText();
         // Extract function ranges
@@ -207,7 +219,6 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
             }
 
         const config = vscode.workspace.getConfiguration('autokaker');
-        const LLMService = config.get<string>('LLMServiceName', 'Neuroengine-Code');
         let   rangesAndTexts: RangeAndText[] = [];
         // Retrieve old decorations and ranges from editor storage
         editorsWithDecorations.forEach((editorDecorations, index) => {
@@ -221,14 +232,24 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
         for (const analyzedRange of rangesToAnalyze) {
             numranges++;
             const code = getTextWithinRange(fullCode,analyzedRange);
-            const prompt = `<s>[INST]Analize the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
+            let prompt:string;
+            if (detailed===false)
+                prompt = `<s>[INST]Analize the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
 
 {"vulnerabilities": [
 {"line":3,shortdescription:"Stack-based buffer overflow", "impact":10},
 {"line":15,shortdescription:"Possible integer overflow in variable X","impact":4}
 ]}
 
-Make sure you verify the vulnerabilities. Write this raw json and nothing more:[/INST]`
+Write this raw json and nothing more:[/INST]`
+            else prompt = `<s>[INST]Analize the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
+
+{"vulnerabilities": [
+{"line":3,shortdescription:"Stack-based buffer overflow: The variable x has a buffer len of 256 but the strcpy function may overflows this buffer, that is located in the stack. This causes the buffer overflow in the stack.", "impact":10},
+{"line":15,shortdescription:"Possible integer overflow in variable X: The variable X is used in a mathematical operation at line YY and the results my exceed the maximum value allowed in the variable.","impact":4}
+]}
+
+Write this raw json and nothing more:[/INST]`
 
             const jsonbegin= `
 {"vulnerabilities": [

@@ -1,7 +1,7 @@
 {
   "name": "autokaker",
   "displayName": "autokaker",
-  "description": "AI-assisted bug hunter",
+  "description": "AI-assisted bug hunter. Press f12 to analyze current function. Ctrl+f12 to analyze current file.",
   "version": "0.0.1",
   "publisher": "@ortegaalfredo",
   "icon": "images/autok.png",
@@ -67,6 +67,10 @@
       {
         "command": "autokaker.AnalyzeAll",
         "title": "Analyze all functions"
+      },
+      {
+        "command": "autokaker.AnalyzeDetail",
+        "title": "Analyze current function, detailed"
       }
     ],
     "keybindings": [
@@ -78,6 +82,11 @@
       {
         "command": "autokaker.analyzeAll",
         "key": "ctrl+f12",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "autokaker.analyzeDetail",
+        "key": "alt+f12",
         "when": "editorTextFocus"
       }
     ]

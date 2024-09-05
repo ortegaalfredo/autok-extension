@@ -27,9 +27,9 @@ This extension can be installed in VSCode using the "Install from VSIX..." menu 
 
 ## Usage
 
-After installation, place the cursor inside any C/C++, Solidity, or JavaScript function and press F12. The plugin will analyze the code and report the results.
+After installation, place the cursor inside any C/C++, Solidity, or JavaScript function and press F12. The plugin will analyze the code and report the results. For a more detailed report, press Alt+F12.
 
-By pressing Ctrl+F12, the extension will sequentially analyze all functions in the currently open file.
+Also by pressing the combination Ctrl+F12, the extension will sequentially analyze all functions in the currently open file.
 
 If a vulnerability is found, it is added as a label as such. The label is color-coded with black meaning no impact and bright red, critical impact. Pressing F12 again will clean all labels.
 
