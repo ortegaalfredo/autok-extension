@@ -112,6 +112,17 @@ class Neuroengine {
             req.on('error', (e) => reject(e));
             req.write(jsonData);
             req.end();
+
+        // Set a timeout of 30 seconds
+        const timeout = setTimeout(() => {
+            req.destroy();
+            reject(new Error('Request timed out'));
+        }, 30000);
+
+        // Clear the timeout if the request completes successfully
+        req.on('response', () => clearTimeout(timeout));
+        req.on('error', () => clearTimeout(timeout));
+
         });
     }
 }

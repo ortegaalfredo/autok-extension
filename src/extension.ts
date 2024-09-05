@@ -346,7 +346,7 @@ Write this raw json and nothing more:[/INST]`
             } catch (error: unknown) {
                 if (error instanceof Error) {
                     console.log('Error:'+error.message);
-                    vscode.window.showErrorMessage('Error calling AI: ' + error.message);
+                    vscode.window.showErrorMessage('AI service not available.');
                 } else {
                     console.log('Error');
                     vscode.window.showErrorMessage('An unknown error occurred');
