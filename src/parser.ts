@@ -14,7 +14,7 @@ export function extractFunctionRanges(code: string): Range[] {
         const line = lines[i].trim(); // Trim whitespace from the line
 
         if (line.includes('{')) {
-            stack.push(i); // Push the line number onto the stack if it contains an opening brace
+            stack.push(Math.max(i-5,0)); // Push the line number onto the stack if it contains an opening brace
         }
 
         if (line.includes('}')) {

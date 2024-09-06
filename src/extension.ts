@@ -199,7 +199,6 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
     if (editor) {
         const fullCode = editor.document.getText();
         // Extract function ranges
-        //const functionRanges: Range[] = extractFunctionRanges(fullCode);
         const functionRanges = extractFunctionRanges(fullCode);
         const currentLine = getCurrentLineNumber(editor);
         if (currentLine===undefined)  {return;}
