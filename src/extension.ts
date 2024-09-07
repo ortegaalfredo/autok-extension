@@ -218,6 +218,7 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
             }
 
         const config = vscode.workspace.getConfiguration('autokaker');
+        const multishot = config.get<boolean>('multishot', false);
         let   rangesAndTexts: RangeAndText[] = [];
         // Retrieve old decorations and ranges from editor storage
         editorsWithDecorations.forEach((editorDecorations, index) => {
@@ -231,6 +232,15 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
             numranges++;
             const code = getTextWithinRange(fullCode,analyzedRange);
             let prompt:string;
+            if (multishot === true) {
+
+                prompt = `You are an expert bug hunter assistant. Analyze the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs like this:
+
+                Only write a single line number a and a short description, and their impact as a number 0 for less impact and 10 for high impact vulnerability.
+
+                Assistant: Based on the provided code, here are the potential bugs and their descriptions:\n`;
+
+            } else
             if (detailed===false)
                 prompt = `Analyze the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
 
@@ -247,7 +257,7 @@ Write this raw json and nothing more:`
 {"line":15,shortdescription:"Possible integer overflow in variable X: The variable X is used in a mathematical operation at line YY and the results my exceed the maximum value allowed in the variable.","impact":4}
 ]}
 
-Write this raw json and nothing more:`
+Write this raw json and nothing more:`;
 
             const jsonbegin= `
 {"vulnerabilities": [
@@ -304,7 +314,23 @@ Write this raw json and nothing more:`
                         //editor.setDecorations(smallNumberDecorationType,[functionRange]);
 
                         // Call LLM and process code
-                        let response: string | null = await getLLMResponse(prompt, jsonbegin);
+                        let response: string | null;
+                        if (multishot === true) { // Two queries
+                            response = await getLLMResponse(prompt, '');
+                            if (response === null) {
+                                console.log('Response null');
+                                return;
+                                }
+                            response = response.replace(prompt,'');
+                            prompt = `I have this list of code vulnerabilities:\n\n`+response+`\n\n And I need you to convert them to json format like this:
+{"vulnerabilities": [
+{"line":3,shortdescription:"Stack-based buffer overflow", "impact":10},
+{"line":15,shortdescription:"Possible integer overflow in variable X","impact":4}
+]}
+Write this raw json and nothing more:`;
+                            response = await getLLMResponse(prompt, jsonbegin);
+                        } else  // single query
+                            response = await getLLMResponse(prompt, jsonbegin);
                         funcDecoration.dispose();
                         if (response === null) {
                             console.log('Response null');

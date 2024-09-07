@@ -21,7 +21,7 @@ Demo running on gpt-4o:
 
 First, download the .vsix extension from:
 
-[Autok-extension VSIX](https://github.com/ortegaalfredo/autok-extension/raw/main/autokaker-0.0.1.vsix)
+[Autok-extension VSIX](https://github.com/ortegaalfredo/autok-extension/raw/main/autokaker-0.0.2.vsix)
 
 This extension can be installed in VSCode using the "Install from VSIX..." menu from the extensions settings. Simply locate the pre-compiled .vsix file and open it.
 
@@ -44,8 +44,26 @@ This extension was tested on VSCode 1.92. By default, it uses the free LLM servi
 
 ## Extension Settings
 
-From the extension settings page, you can set the LLM type (neuroengine, OpenAI or custom endpoint)
-The default do not require any furter configuration. If you choose OpenAI or custom-endpoint, you need to fill the required parameters, like API-key and model name.
+### Multishot
+
+Make several queries to the LLM to improve results. Slow but usually improves quality.
+
+### Service
+
+Choose 'Neuroengine.ai' for free analyzer API. Choose 'OpenAI' to use ChatGPT and other models, remember to set model and apikey. Choose 'Custom endpoint' and specify it in the next setting.
+
+### Custom endpoint
+
+URL of the custom endpoint. For example, to access a local llama.cpp server API enter 'http://127.0.0.1:8080/v1/chat/completions'.
+
+### Model name
+
+Model name for OpenAI-style services. A good model is 'gpt-4o'. The free Neuroengine API does not use this setting.
+
+### Api Key
+
+Service API Key. The free Neuroengine API does not use this setting.
+
 
 ![Settings page](https://raw.githubusercontent.com/ortegaalfredo/autok-extension/main/setting.png)
 
