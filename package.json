@@ -2,7 +2,7 @@
   "name": "autokaker",
   "displayName": "autokaker",
   "description": "AI-assisted bug hunter. Press f12 to analyze current function. Ctrl+f12 to analyze current file.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "@ortegaalfredo",
   "icon": "images/autok.png",
   "repository": {
@@ -22,6 +22,13 @@
       "type": "object",
       "title": "AutoKaker Configuration",
       "properties": {
+
+        "autokaker.multishot": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use multi-shot LLM query. Slow but improves quality.",
+          "order": 0
+        },
 
         "autokaker.Service": {
           "type": "string",
