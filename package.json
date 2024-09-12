@@ -2,7 +2,7 @@
   "name": "autokaker",
   "displayName": "autokaker",
   "description": "AI-assisted bug hunter. Press f12 to analyze current function. Ctrl+f12 to analyze current file.",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "publisher": "@ortegaalfredo",
   "icon": "images/autok.png",
   "repository": {
@@ -26,7 +26,21 @@
         "autokaker.multishot": {
           "type": "boolean",
           "default": false,
-          "description": "Use multi-shot LLM query. Slow but improves quality.",
+          "description": "Use multi-shot LLM query. Usually improves quality of reports.",
+          "order": 0
+        },
+
+        "autokaker.report": {
+          "type": "boolean",
+          "default": false,
+          "description": "Write a report on an external file detailing each finding. Slower.",
+          "order": 0
+        },
+
+        "autokaker.verify": {
+          "type": "boolean",
+          "default": false,
+          "description": "Verify each finding, much slower but reduces false positive rate.",
           "order": 0
         },
 
@@ -74,10 +88,6 @@
       {
         "command": "autokaker.AnalyzeAll",
         "title": "Analyze all functions"
-      },
-      {
-        "command": "autokaker.AnalyzeDetail",
-        "title": "Analyze current function, detailed"
       }
     ],
     "keybindings": [
@@ -89,11 +99,6 @@
       {
         "command": "autokaker.analyzeAll",
         "key": "ctrl+f12",
-        "when": "editorTextFocus"
-      },
-      {
-        "command": "autokaker.analyzeDetail",
-        "key": "alt+f12",
         "when": "editorTextFocus"
       }
     ]
