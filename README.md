@@ -21,13 +21,13 @@ Demo running on gpt-4o:
 
 First, download the .vsix extension from:
 
-[Autok-extension VSIX](https://github.com/ortegaalfredo/autok-extension/raw/main/autokaker-0.0.2.vsix)
+[Autok-extension VSIX](https://github.com/ortegaalfredo/autok-extension/raw/main/autokaker-0.0.5.vsix)
 
 This extension can be installed in VSCode using the "Install from VSIX..." menu from the extensions settings. Simply locate the pre-compiled .vsix file and open it.
 
 ## Usage
 
-After installation, place the cursor inside any C/C++, Solidity, or JavaScript function and press F12. The plugin will analyze the code and report the results. For a more detailed report, press Alt+F12.
+After installation, place the cursor inside any C/C++, Solidity, or JavaScript function and press F12. The plugin will analyze the code and report the results. 
 
 Also by pressing the combination Ctrl+F12, the extension will sequentially analyze all functions in the currently open file.
 
@@ -47,6 +47,14 @@ This extension was tested on VSCode 1.92. By default, it uses the free LLM servi
 ### Multishot
 
 Make several queries to the LLM to improve results. Slow but usually improves quality.
+
+### Report
+
+Write a detailed description of every finding to an external file. The filename is the current file plus ".report" extension.
+
+### Verify
+
+Verify each finding to reduce false positive rate. It attach "UNLIKELY" to each unlikely finding, and the color is yellow instead of red. This option increment greatly the finding quality but is *very* slow and is recommended to use with a fast LLM.
 
 ### Service
 
@@ -111,7 +119,15 @@ vsce package
 ```
 
 ## Release Notes
+## 0.0.5
 
-### 1.0.0
+Add finding verification and report writing
+
+### 0.0.2
+
+Add multishot
+
+### 0.0.1
 
 Initial release of autok-extension
+

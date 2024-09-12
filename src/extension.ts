@@ -1,9 +1,12 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import getLLMResponse from './llm';
 import { Range, extractFunctionRanges, findRangeForLineNumber, getTextWithinRange } from './parser';
 
 // Define an interface to represent the structure of the JSON vulnerability data
 interface Vulnerability {
+    filename: string;
     line: number; // The line number where the vulnerability is detected
     shortdescription: string; // A brief description of the vulnerability
     impact: number; // The impact level of the vulnerability
@@ -74,17 +77,6 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    let disposableDetail = vscode.commands.registerCommand('autokaker.analyzeDetail', async () => {
-        const editor = vscode.window.activeTextEditor;
-        if (editor && !LLMActive) {
-            LLMActive = true;
-            KakerState = AnalysisState.AnalyzeCurrent;
-            await highlightDebugLines(editor, KakerState,true);
-            KakerState = AnalysisState.DontRun;
-            LLMActive = false;
-
-        }
-    });
 
     // Register a command to analyze the entire file
     let disposableF12 = vscode.commands.registerCommand('autokaker.analyzeAll', async () => {
@@ -99,7 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     // Add the commands to the context subscriptions
-    context.subscriptions.push(disposableF11, disposableF12,disposableDetail);
+    context.subscriptions.push(disposableF11, disposableF12);
 
     // Subscribe to the event when the active text editor changes (switching tabs)
     const changeTab = vscode.window.onDidChangeActiveTextEditor(editor => {
@@ -149,7 +141,7 @@ function extractJsonFromString(input: string): string | null {
 
   //------------------------------------- Manage Decorations ------------------------------------
   // Create custom decoration (vuln text box) 
-  function createDecorationType(text: string,impact:number): vscode.TextEditorDecorationType {
+  function createDecorationType(text: string,impact:number, r:number,g:number,b:number): vscode.TextEditorDecorationType {
     // Calculate the alpha value based on the impact
     const alpha = (impact - 1) * (0.5 / 9); // This will give a value between 0.1 and 0.5 when impact is between 1 and 10
 
@@ -157,7 +149,7 @@ function extractJsonFromString(input: string): string | null {
         after: {
             contentText: `<-- ${text}`,
             color: new vscode.ThemeColor('editor.foreground'),
-            backgroundColor:  `rgba(255, 0, 0, ${alpha})`,
+            backgroundColor:  `rgba(${r}, ${g}, ${b}, ${alpha})`,
             border: '1px solid darkgray',
             margin: '0 0 0 3em',
             fontStyle: 'italic',
@@ -195,7 +187,35 @@ function showNotification(message: string, duration: number) {
     );
   }
 
-async function highlightDebugLines(editor: vscode.TextEditor,KakerState:AnalysisState, detailed=false) {
+// Refine finding
+// Provide list of all function headers
+
+async function refineFinding(code: string,finding: Vulnerability): Promise<string> {
+
+    let prompt = `We need to find if a vulnerability in this code is true or not: \n\n`+code+`\n\n
+    The vulnerability is this: \n'`+finding.shortdescription+`\nLine number: `+finding.line+`
+    Analyze the vulnerability very carefully, checking all conditions neccesary, first write the analysis and then write a single word with the conclusion 'LIKELY' if it is likley to exist or 'UNLIKELY' if it is not likely to exist or cannot be confirmed.'
+    
+    Expert coder analysis and reasoning: `;
+    console.log("---- Checking Line:"+finding.line+": "+finding.shortdescription);
+    // Call LLM and process code
+    
+    let response: string | null;
+    response = await getLLMResponse(prompt, '');
+    if (response !== null) {
+        response = response.replace(prompt,'');
+        console.log(response);
+        if (response.includes("UNLIKELY")) {
+            finding.shortdescription="(UNLIKELY) "+finding.shortdescription;
+            }
+        return(response);
+        }
+    return "";
+}
+
+
+
+async function highlightDebugLines(editor: vscode.TextEditor,KakerState:AnalysisState) {
     if (editor) {
         const fullCode = editor.document.getText();
         // Extract function ranges
@@ -217,8 +237,12 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
             rangesToAnalyze.push(...filteredRanges);
             }
 
+        // Get config flags
         const config = vscode.workspace.getConfiguration('autokaker');
         const multishot = config.get<boolean>('multishot', false);
+        const verify = config.get<boolean>('verify', false);
+        const report = config.get<boolean>('report', false);
+
         let   rangesAndTexts: RangeAndText[] = [];
         // Retrieve old decorations and ranges from editor storage
         editorsWithDecorations.forEach((editorDecorations, index) => {
@@ -228,6 +252,12 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
         });
         // Iterate though all ranges and analyze
         let numranges=0;
+        let reportString:string="";
+        const reportPath=editor.document.fileName+".report";
+        // Save external report
+        if (report===true) {
+            fs.unlink(reportPath, (err) => {});
+            }
         for (const analyzedRange of rangesToAnalyze) {
             numranges++;
             const code = getTextWithinRange(fullCode,analyzedRange);
@@ -240,8 +270,7 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
 
                 Assistant: Based on the provided code, here are the potential bugs and their descriptions:\n`;
 
-            } else
-            if (detailed===false)
+            } else {
                 prompt = `Analyze the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
 
 {"vulnerabilities": [
@@ -249,15 +278,8 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
 {"line":15,shortdescription:"Possible integer overflow in variable X","impact":4}
 ]}
 
-Write this raw json and nothing more:`
-            else prompt = `Analyze the following code very carefully and look for security bugs, integer overflow, memory leaks and use-after-free vulnerabilities:\n\n`+code+`\n\nNow, return a list of bugs in json format like this:
-
-{"vulnerabilities": [
-{"line":3,shortdescription:"Stack-based buffer overflow: The variable x has a buffer len of 256 but the strcpy function may overflows this buffer, that is located in the stack. This causes the buffer overflow in the stack.", "impact":10},
-{"line":15,shortdescription:"Possible integer overflow in variable X: The variable X is used in a mathematical operation at line YY and the results my exceed the maximum value allowed in the variable.","impact":4}
-]}
-
 Write this raw json and nothing more:`;
+                };
 
             const jsonbegin= `
 {"vulnerabilities": [
@@ -267,7 +289,6 @@ Write this raw json and nothing more:`;
                     // Clear previous decorations if any
                     let disposedDecorations = 0;
                     if (rangesAndTexts) {
-
                         rangesAndTexts = rangesAndTexts.filter(({ range, text, impact, decoration }) => {
                             if (decoration) {
                                 if ((range.start.line >= analyzedRange.start) && (range.start.line <= analyzedRange.end)) {
@@ -285,7 +306,7 @@ Write this raw json and nothing more:`;
 
                     };
                     // If we erased decorations, then don't call the llm. We don't re-analyze an already-analyzed function.
-                    if (disposedDecorations==0) {
+                    if (disposedDecorations===0) {
                         let messageString: string;
                         if (KakerState===AnalysisState.AnalyzeAll) {messageString ='AUTOK: Analyzing function '+numranges+' of '+rangesToAnalyze.length+"...";}
                         else {messageString = 'AUTOK: Analyzing current function...';}
@@ -311,7 +332,6 @@ Write this raw json and nothing more:`;
                         const endFunc = new vscode.Position(analyzedRange.end+1,0);
                         const functionRange = new vscode.Range(startFunc,endFunc);
                         editor.setDecorations(funcDecoration,[functionRange]);
-                        //editor.setDecorations(smallNumberDecorationType,[functionRange]);
 
                         // Call LLM and process code
                         let response: string | null;
@@ -329,9 +349,9 @@ Write this raw json and nothing more:`;
 ]}
 Write this raw json and nothing more:`;
                             response = await getLLMResponse(prompt, jsonbegin);
-                        } else  // single query
+                        } else {  // single query
                             response = await getLLMResponse(prompt, jsonbegin);
-                        funcDecoration.dispose();
+                            };
                         if (response === null) {
                             console.log('Response null');
                             return;
@@ -340,15 +360,28 @@ Write this raw json and nothing more:`;
                         response = extractJsonFromString(response);
                         // Parse the JSON string into a JavaScript object
                         const jsonVulns: VulnerabilitiesData = JSON.parse(response!);
-                        // Iterate through the array and process each vulnerability
-                        jsonVulns.vulnerabilities.forEach(vulnerability => {
-                            const startPos = new vscode.Position(vulnerability.line-1, 0);
-                            const endPos = new vscode.Position(vulnerability.line-1, editor.document.lineAt(vulnerability.line-1).text.length);
-                            const range = new vscode.Range(startPos, endPos);
-                            const decorationType = createDecorationType(vulnerability.shortdescription,vulnerability.impact);
-                            rangesAndTexts.push({range,text:vulnerability.shortdescription,impact:vulnerability.impact,decoration:decorationType});
-                        });
-                        }
+                        // Iterate through the array and process each vulnerabilitya
+                        for (const vulnerability of jsonVulns.vulnerabilities) {
+                                vulnerability.filename=editor.document.fileName;
+                                if ((verify===true) || (report===true)) { // Verify findings or write report
+                                    reportString+="# "+vulnerability.filename+":"+vulnerability.line+": "+vulnerability.shortdescription+"\n";
+                                    reportString+=(await refineFinding(code, vulnerability));
+                                    reportString+="\n\n--------------------------\n\n";
+                                    }
+                                const startPos = new vscode.Position(vulnerability.line - 1, 0);
+                                const endPos = new vscode.Position(vulnerability.line - 1, editor.document.lineAt(vulnerability.line - 1).text.length);
+                                const range = new vscode.Range(startPos, endPos);
+                                let r=255;let g=0;let b=0; // Vuln color
+                                if (vulnerability.shortdescription.includes("UNLIKELY")) {g=255;}
+                                const decorationType = createDecorationType(vulnerability.shortdescription, vulnerability.impact,r,g,b);
+                                rangesAndTexts.push({ range, text: vulnerability.shortdescription, impact: vulnerability.impact, decoration: decorationType });
+                            }
+                        funcDecoration.dispose();
+                        // Save external report
+                        if (report===true) {
+                            fs.appendFile(reportPath,reportString, (err) => {});
+                            }
+                    }
                     
                     // Set decorations
                     rangesAndTexts.forEach(({ range, text,impact,decoration }) => {
