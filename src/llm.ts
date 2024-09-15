@@ -26,7 +26,7 @@ async function callOpenAI(prompt: string,apiKey: string,endpoint:string,modelNam
                 content: prompt
             }
         ],
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.0,
     };
     
@@ -85,7 +85,7 @@ async function getLLMResponse(prompt: string, jsonbegin: string): Promise<string
               });
             const response: string | null = await neuroengine.request(prompt + jsonbegin, {
                 temperature: 0.0,
-                max_new_len: 1000,
+                max_new_len: 1500,
                 raw: true
                 });
             if (response === null) {

@@ -253,7 +253,7 @@ async function highlightDebugLines(editor: vscode.TextEditor,KakerState:Analysis
         // Iterate though all ranges and analyze
         let numranges=0;
         let reportString:string="";
-        const reportPath=editor.document.fileName+".report";
+        const reportPath=editor.document.fileName+".report.md";
         // Save external report
         if (report===true) {
             fs.unlink(reportPath, (err) => {});
@@ -364,7 +364,8 @@ Write this raw json and nothing more:`;
                         for (const vulnerability of jsonVulns.vulnerabilities) {
                                 vulnerability.filename=editor.document.fileName;
                                 if ((verify===true) || (report===true)) { // Verify findings or write report
-                                    reportString+="# "+vulnerability.filename+":"+vulnerability.line+": "+vulnerability.shortdescription+"\n";
+                                    reportString+="# "+vulnerability.shortdescription+"\n";
+                                    reportString+="## "+vulnerability.filename+":"+vulnerability.line+"\n";
                                     reportString+=(await refineFinding(code, vulnerability));
                                     reportString+="\n\n--------------------------\n\n";
                                     }
